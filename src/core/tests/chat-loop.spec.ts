@@ -147,5 +147,32 @@ describe("ChatLoop", () => {
       expect(mockMessageHandler.mock.calls[0][0].content).toBe("message 1");
       expect(mockMessageHandler.mock.calls[1][0].content).toBe("message 2");
     });
+
+    it("should maintain chat history", async () => {
+      mockReadline.question
+        .mockImplementationOnce((prompt: string, cb: (input: string) => void) =>
+          cb("message 1")
+        )
+        .mockImplementationOnce((prompt: string, cb: (input: string) => void) =>
+          cb("message 2")
+        )
+        .mockImplementationOnce((prompt: string, cb: (input: string) => void) =>
+          cb("q")
+        );
+
+      await chatLoop.start();
+
+      expect(mockMessageHandler).toHaveBeenCalledTimes(2);
+      // First message should have empty history
+      expect(mockMessageHandler.mock.calls[0][0].history).toEqual([]);
+      // Second message should have history of first message and response
+      expect(mockMessageHandler.mock.calls[1][0].history.length).toBe(2);
+      expect(mockMessageHandler.mock.calls[1][0].history[0].content).toBe(
+        "message 1"
+      );
+      expect(mockMessageHandler.mock.calls[1][0].history[1].content).toBe(
+        "Response to: message 1"
+      );
+    });
   });
 });

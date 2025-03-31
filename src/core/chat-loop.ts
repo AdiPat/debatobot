@@ -1,13 +1,5 @@
 import * as readline from "readline";
-
-/** Represents a chat message structure */
-interface ChatMessage {
-  content: string;
-  timestamp: Date;
-}
-
-/** Type definition for the message handler callback */
-type MessageHandler = (message: ChatMessage) => Promise<ChatMessage>;
+import { ChatMessage, MessageHandler } from "../models";
 
 /**
  * ChatLoop manages an interactive chat session with proper input/output handling
@@ -16,6 +8,7 @@ type MessageHandler = (message: ChatMessage) => Promise<ChatMessage>;
 export class ChatLoop {
   private readonly rl: readline.Interface;
   private isRunning: boolean = false;
+  private messageHistory: ChatMessage[] = [];
 
   /**
    * Creates a new ChatLoop instance
@@ -47,10 +40,12 @@ export class ChatLoop {
         const message: ChatMessage = {
           content: input,
           timestamp: new Date(),
+          history: [...this.messageHistory],
         };
 
         try {
           const response = await this.messageHandler(message);
+          this.messageHistory = [...this.messageHistory, message, response];
           this.displayResponse(response);
         } catch (error) {
           console.error("Error processing message:", error);
